@@ -3,7 +3,9 @@ import Blog from './components/Blog'
 import Notification from './components/Notification'
 import blogService from './services/blogs'
 import loginService from './services/login'
-
+import Togglable from './components/Togglable'
+import LoginForm from './components/LoginForm'
+import BlogForm from './components/BlogForm'
 
 const Footer = () => {
   const footerStyle = {
@@ -16,7 +18,7 @@ const Footer = () => {
     <div style={footerStyle}>
       <br />
       {/* <em>Blog app</em> */}
-    </div> 
+    </div>
   )
 }
 
@@ -25,31 +27,33 @@ const App = () => {
   const [newBlog, setNewBlog] = useState('')
   const [showAll, setShowAll] = useState(true)
   const [errorMessage, setErrorMessage] = useState(null)
-  const [username, setUsername] = useState('') 
-  const [password, setPassword] = useState('') 
-  const [user, setUser] = useState(null) 
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [user, setUser] = useState(null)
 
   useEffect(() => {
-    blogService.getAll().then(blogs =>
-      setBlogs( blogs )
-    )  
+    blogService.getAll().then(initialBlogs =>
+      setBlogs(initialBlogs)
+    )
   }, [])
+
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
     if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON)
       setUser(user)
       blogService.setToken(user.token)
-    } 
-    
+    }
+
   }, [])
 
   const blogsToShow = showAll
     ? blogs
     : blogs.filter()
 
-  const addBlog= (event) => {
+  const addBlog = (event) => {
     event.preventDefault()
+    blogFormRef.current.toggleVisibility()
     const blogObject = {
       title: newBlog,
 
@@ -75,7 +79,7 @@ const App = () => {
 
       window.localStorage.setItem(
         'loggedBlogappUser', JSON.stringify(user)
-      ) 
+      )
       window.localStorage.removeItem('loggedBlogappUser', JSON.stringify(user)
       )
 
@@ -92,10 +96,10 @@ const App = () => {
   }
   const handleLogout = async (event) => {
     event.preventDefault()
-    
-      window.localStorage.removeItem('loggedBlogappUser', JSON.stringify(user)
-      )
-    
+
+    window.localStorage.removeItem('loggedBlogappUser', JSON.stringify(user)
+    )
+
   }
 
   const rows = () => blogsToShow.map(blog =>
@@ -105,44 +109,35 @@ const App = () => {
     />
   )
 
-  const loginForm = () => (
-    <form onSubmit={handleLogin}>
-      <div>
-        käyttäjätunnus
-          <input
-          type="text"
-          value={username}
-          name="Username"
-          onChange={({ target }) => setUsername(target.value)}
+  const loginForm = () => {
+    return (
+      <Togglable buttonLabel='login'>
+        <LoginForm
+          username={username}
+          password={password}
+          handleUsernameChange={({ target }) => setUsername(target.value)}
+          handlePasswordChange={({ target }) => setPassword(target.value)}
+          handleSubmit={handleLogin}
         />
-      </div>
-      <div>
-        salasana
-          <input
-          type="password"
-          value={password}
-          name="Password"
-          onChange={({ target }) => setPassword(target.value)}
-        />
-      </div>
-      <button type="submit">kirjaudu</button>
-    </form>      
-  )
+      </Togglable>
+    )
+  }
+  const blogFormRef = React.createRef()
 
   const blogForm = () => (
-    <form onSubmit={addBlog}>
-      <input
+    <Togglable buttonLabel="new blog" ref={blogFormRef}>
+      <BlogForm
+        onSubmit={addBlog}
         value={newBlog}
-        onChange={handleBlogChange}
+        handleChange={handleBlogChange}
       />
-      <button type="submit">tallenna</button>
-    </form>  
+    </Togglable>
   )
   const logoutForm = () => (
     <form >
-      
+
       <button type="submit">logout</button>
-    </form>  
+    </form>
   )
 
   return (
@@ -160,8 +155,8 @@ const App = () => {
           {blogForm()}
           {logoutForm()}
           <ul>
-        {rows()}
-      </ul>
+            {rows()}
+          </ul>
         </div>
       }
 

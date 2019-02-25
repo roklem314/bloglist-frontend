@@ -1,10 +1,10 @@
 import React from 'react'
 
-const Blog = ({ title, author, url }) => {
+const Blog = ({ blog }) => {
 
   return (
     <li className='blog'>
-      {title} {author} {url}
+      {blog.title} {blog.author} {blog.url}
     </li>
   )
 }
